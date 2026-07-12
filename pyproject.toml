@@ -1,0 +1,52 @@
+[project]
+name = "private-telegram-ai-assistant"
+version = "0.1.0"
+description = "Private owner-controlled Telegram AI executive assistant"
+requires-python = ">=3.11"
+dependencies = [
+  "openai>=2.42.0",
+  "openai-agents>=0.3.0",
+  "python-telegram-bot>=22.3",
+  "pydantic>=2.11.0",
+  "pydantic-settings>=2.10.0",
+  "sqlalchemy>=2.0.40",
+  "aiosqlite>=0.21.0",
+  "asyncpg>=0.30.0",
+  "structlog>=25.4.0",
+  "python-docx>=1.1.2",
+  "pypdf>=5.7.0",
+  "openpyxl>=3.1.5",
+  "pandas>=2.3.0",
+  "python-magic>=0.4.27",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.4.0", "pytest-asyncio>=1.0.0", "ruff>=0.12.0", "mypy>=1.16.0"]
+
+[project.scripts]
+assistant-bot = "assistant_bot.main:main"
+assistant-smoke = "assistant_bot.smoke:main"
+assistant-verify-telegram = "assistant_bot.telegram.verify:main"
+assistant-configure-token = "assistant_bot.configure_token:main"
+
+[build-system]
+requires = ["setuptools>=70", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "ASYNC", "S"]
+ignore = ["S101", "S603", "S607"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-dir]
+"" = "src"
