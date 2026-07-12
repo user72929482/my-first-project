@@ -93,6 +93,10 @@ docker compose up -d --build
 
 Keep `.env`, `data/`, and `workspaces/` backed up. Do not publish them.
 
+## Railway deployment
+
+Deploy the GitHub repository named **private-telegram-ai-assistant** to Railway, not a placeholder repository named `my-first-project`. Railway is configured by `railway.json` to build the existing `Dockerfile`. See `docs/RAILWAY.md` for the exact required Railway variables and first-run Telegram checks.
+
 ## 7. Update
 
 ```bash

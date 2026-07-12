@@ -11,4 +11,4 @@ class ProjectService:
     async def list(self, session) -> list[Project]: return session.list_projects()
     async def remember(self, session, key: str, value: str, project_id: int | None = None) -> None:
         session.add_memory(Memory(project_id=project_id,key=key[:120],value=value[:4000])); await session.commit()
-    async def memories(self, session) -> list[Memory]: return session.list_memories()
+    async def memories(self, session, project_id: int | None = None) -> list[Memory]: return session.list_memories(project_id)
