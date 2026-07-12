@@ -47,9 +47,10 @@ def test_file_validation_and_workspace_execution(tmp_path):
 
 def test_agent_safe_without_real_credentials(tmp_path):
     async def inner():
+        from assistant_bot.agents.factory import MissingOpenAIKeyError
         settings = Settings(database_url=f"sqlite+aiosqlite:///{tmp_path/'a.db'}", telegram_bot_token="0:test", openai_api_key="", workspace_root=tmp_path)
-        result = await AssistantAgent(settings).run("hello")
-        assert "could not reach" in result.text.lower() or result.text
+        with pytest.raises(MissingOpenAIKeyError, match="OPENAI_API_KEY"):
+            await AssistantAgent(settings).run("hello")
     asyncio.run(inner())
 
 def test_dotenv_loader_sets_token(tmp_path, monkeypatch):
@@ -65,3 +66,28 @@ def test_configure_token_upsert_preserves_other_values(tmp_path):
     lines = ["OPENAI_API_KEY=sk-placeholder", "TELEGRAM_BOT_TOKEN=old"]
     updated = _upsert(lines, "TELEGRAM_BOT_TOKEN", "123456:abcdefghijklmnopqrstuvwxyz")
     assert updated == ["OPENAI_API_KEY=sk-placeholder", "TELEGRAM_BOT_TOKEN=123456:abcdefghijklmnopqrstuvwxyz"]
+
+def test_selected_project_and_conversation_persist(tmp_path):
+    async def inner():
+        db = tmp_path / "state.db"
+        settings = Settings(database_url=f"sqlite+aiosqlite:///{db}", workspace_root=tmp_path/"ws", telegram_allowed_user_id=42, telegram_bot_token="0:test", openai_api_key="sk-test")
+        dbs.init_engine(settings.database_url); await dbs.create_schema()
+        async with dbs.SessionLocal() as session:
+            project = await ProjectService(settings.workspace_root).create(session, "Persisted Project")
+            session.set_selected_project(42, project.id)
+            session.add_message(42, "user", "remember this", project.id)
+            await session.commit()
+        dbs.init_engine(settings.database_url); await dbs.create_schema()
+        async with dbs.SessionLocal() as session:
+            assert session.selected_project(42) == project.id
+            assert session.recent_messages(42, project.id)[0] == ("user", "remember this")
+    asyncio.run(inner())
+
+
+def test_agent_reports_missing_openai_key(tmp_path):
+    async def inner():
+        from assistant_bot.agents.factory import MissingOpenAIKeyError
+        settings = Settings(database_url=f"sqlite+aiosqlite:///{tmp_path/'missing.db'}", telegram_bot_token="0:test", openai_api_key="", workspace_root=tmp_path)
+        with pytest.raises(MissingOpenAIKeyError, match="OPENAI_API_KEY"):
+            await AssistantAgent(settings).run("hello")
+    asyncio.run(inner())
